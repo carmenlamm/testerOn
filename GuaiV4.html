@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>怪怪远征计算器 · 独立骰值上限版</title>
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif;
+    background: linear-gradient(145deg, #e9f0f5 0%, #d9e2ec 100%);
+    color: #1e2a3e;
+    padding: 20px;
+    transition: all 0.3s ease;
+    min-height: 100vh;
+}
+
+body.dark {
+    background: linear-gradient(145deg, #121826 0%, #0a0f16 100%);
+    color: #eef2ff;
+}
+
+.container {
+    max-width: 1300px;
+    margin: 0 auto;
+}
+
+.card {
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(12px);
+    border-radius: 32px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.15), 0 1px 2px rgba(0, 0, 0, 0.03);
+    transition: all 0.3s;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+body.dark .card {
+    background: rgba(28, 34, 48, 0.85);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.4);
+}
+
+h1 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    text-align: center;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.5rem;
+}
+
+h3 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-left: 4px solid #3b82f6;
+    padding-left: 12px;
+}
+
+.current-template {
+    background: linear-gradient(105deg, #fff6e0 0%, #ffefc0 100%);
+    border-radius: 60px;
+    padding: 10px 20px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #b45309;
+    margin-bottom: 20px;
+    box-shadow: inset 0 1px 1px rgba(0,0,0,0.02), 0 2px 6px rgba(0,0,0,0.05);
+}
+
+body.dark .current-template {
+    background: #2d2a1f;
+    color: #fbbf24;
+}
+
+.select-template {
+    width: 100%;
+    padding: 14px 18px;
+    border-radius: 48px;
+    border: 1px solid #cbd5e1;
+    background: white;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: 0.2s;
+    margin-bottom: 0.5rem;
+}
+
+body.dark .select-template {
+    background: #1f2937;
+    border-color: #374151;
+    color: #f1f5f9;
+}
+
+.data-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.data-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 40px;
+    gap: 12px;
+    align-items: center;
+}
+
+.data-row input {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 28px;
+    border: 1px solid #cbd5e1;
+    background: #ffffffdd;
+    font-size: 1rem;
+    text-align: center;
+    font-weight: 500;
+    transition: 0.2s;
+}
+
+.data-row input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+}
+
+body.dark .data-row input {
+    background: #1e293b;
+    border-color: #334155;
+    color: #f8fafc;
+}
+
+.remove-btn {
+    background: #ef4444;
+    border: none;
+    border-radius: 40px;
+    width: 40px;
+    height: 40px;
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+    transition: all 0.15s;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.remove-btn:hover {
+    background: #dc2626;
+    transform: scale(0.96);
+}
+
+.main-btn {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 60px;
+    background: linear-gradient(105deg, #10b981, #059669);
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-top: 12px;
+    cursor: pointer;
+    transition: 0.2s;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+}
+
+.main-btn:active {
+    transform: scale(0.97);
+}
+
+.clear-btn {
+    background: linear-gradient(105deg, #f97316, #ea580c);
+}
+
+.result {
+    font-size: 3rem;
+    font-weight: 800;
+    text-align: center;
+    background: #fee2e2;
+    border-radius: 60px;
+    padding: 16px;
+    margin: 16px 0;
+    color: #dc2626;
+}
+
+body.dark .result {
+    background: #2d1f1f;
+    color: #f87171;
+}
+
+.backward-area {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 16px 0 12px;
+    align-items: center;
+}
+
+.backward-area input {
+    flex: 2;
+    padding: 12px 18px;
+    border-radius: 60px;
+    border: 1px solid #cbd5e1;
+    font-size: 1rem;
+    font-weight: 500;
+    background: white;
+}
+
+.backward-area button {
+    flex: 1;
+    background: #6366f1;
+    border: none;
+    border-radius: 60px;
+    padding: 12px;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    transition: 0.15s;
+}
+
+.backward-area button:hover {
+    background: #4f46e5;
+}
+
+.backward-result {
+    background: #e6f0ff;
+    border-radius: 24px;
+    padding: 12px 18px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-top: 8px;
+    color: #075985;
+}
+
+body.dark .backward-result {
+    background: #1e2a3a;
+    color: #93c5fd;
+}
+
+/* 骰子数独立输入框 */
+.dice-row {
+    background: #f1f5f9;
+    border-radius: 48px;
+    padding: 8px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+    margin-bottom: 12px;
+}
+
+body.dark .dice-row {
+    background: #1e293b;
+}
+
+.dice-label {
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.dice-input {
+    width: 120px;
+    padding: 10px 14px;
+    border-radius: 40px;
+    border: 1px solid #cbd5e1;
+    text-align: center;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.preview-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+    font-size: 0.85rem;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.preview-table th, .preview-table td {
+    border: 1px solid #cbd5e1;
+    padding: 10px 6px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+body.dark .preview-table th, body.dark .preview-table td {
+    border-color: #334155;
+}
+
+.preview-title {
+    font-weight: 700;
+    font-size: 1rem;
+    margin: 20px 0 8px 0;
+    background: #eef2ff;
+    display: inline-block;
+    padding: 4px 18px;
+    border-radius: 40px;
+}
+
+body.dark .preview-title {
+    background: #1f2a3e;
+}
+
+.upper-badge {
+    font-size: 0.7rem;
+    background: #dbeafe;
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-top: 6px;
+    color: #1e3a8a;
+}
+
+body.dark .upper-badge {
+    background: #2d3a5e;
+    color: #bbd7fb;
+}
+
+@media (max-width: 780px) {
+    body {
+        padding: 12px;
+    }
+    .desktop-grid {
+        display: block;
+    }
+    .data-row {
+        grid-template-columns: 1fr 1fr 40px;
+        gap: 8px;
+    }
+    .preview-table th, .preview-table td {
+        font-size: 0.7rem;
+        padding: 6px 3px;
+    }
+    .result {
+        font-size: 2.2rem;
+    }
+}
+
+@media (min-width: 781px) {
+    .desktop-grid {
+        display: grid;
+        grid-template-columns: 1fr 1.2fr;
+        gap: 24px;
+    }
+}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>🎲 怪怪远征计算器</h1>
+<div class="card">
+<div class="current-template" id="currentTemplate">当前卡组：隐月卡组1</div>
+<select class="select-template" id="templateSelect"></select>
+</div>
+<div class="desktop-grid">
+<div class="card">
+<h3>📋 卡组基础（加数 / 乘数）</h3>
+<div class="data-group" id="baseGroup"></div>
+
+<!-- 独立骰子数输入框（用户可编辑，默认3） -->
+<div class="dice-row">
+    <div class="dice-label">
+        <span>🎲</span> 骰子数（额外加数）
+    </div>
+    <input type="number" id="diceInput" class="dice-input" value="3" step="1">
+</div>
+
+<h3>✨ 额外BUFF</h3>
+<div class="data-group" id="buffGroup"></div>
+<button class="main-btn" onclick="addBuff()">+ 添加BUFF</button>
+<button class="main-btn clear-btn" onclick="clearBuff()">🗑️ 清空额外BUFF</button>
+<button class="main-btn" onclick="calculate()">🧮 计算结果</button>
+<div class="result" id="result">0</div>
+
+<div class="backward-area">
+    <input type="number" id="targetResult" placeholder="预期结果" value="100">
+    <button onclick="backwardAdd()">🔍 倒推所需加数</button>
+</div>
+<div id="backwardResult" class="backward-result"></div>
+
+<button class="main-btn" onclick="toggleDark()">🌙 深色模式 / ☀️ 浅色</button>
+</div>
+
+<div class="card">
+<h3>📊 模板预览 + 独立骰值上限</h3>
+<div id="preview"></div>
+</div>
+</div>
+</div>
+
+<script>
+// ========== 集中配置区 - 方便修改 ==========
+// 模板配置：每个模板包含名称、三个词条（每个词条有 add, mul, cap）
+// 注意：预览时每个模板的骰子数固定为3（用于计算原始结果和上限结果）
+const TEMPLATES_CONFIG = [
+    {
+        name: "隐月卡组1",
+        slots: [
+            { add: 3, mul: 1.2, cap: 6 },
+            { add: 3, mul: 1.2, cap: 5 },
+            { add: 0, mul: 1.8, cap: 7 }
+        ]
+    },
+    {
+        name: "隐月卡组2",
+        slots: [
+            { add: 2, mul: 1.4, cap: 6 },
+            { add: 2, mul: 1.2, cap: 6 },
+            { add: 0, mul: 1.8, cap: 6 }
+        ]
+    },
+    {
+        name: "隐月卡组3",
+        slots: [
+            { add: 1, mul: 1.2, cap: 6 },
+            { add: 1, mul: 1.4, cap: 6 },
+            { add: 0, mul: 1.4, cap: 6 }
+        ]
+    },
+    {
+        name: "兔兔卡组1",
+        slots: [
+            { add: 1, mul: 1.2, cap: 6 },
+            { add: 1, mul: 1.4, cap: 6 },
+            { add: 0, mul: 1.4, cap: 6 }
+        ]
+    },
+    {
+        name: "兔兔卡组2",
+        slots: [
+            { add: 1, mul: 1.2, cap: 6 },
+            { add: 1, mul: 1.4, cap: 6 },
+            { add: 0, mul: 1.4, cap: 6 }
+        ]
+    },
+    {
+        name: "兔兔卡组3",
+        slots: [
+            { add: 1, mul: 1.2, cap: 6 },
+            { add: 1, mul: 1.4, cap: 6 },
+            { add: 0, mul: 1.4, cap: 6 }
+        ]
+    },
+    {
+        name: "魂骑卡组1",
+        slots: [
+            { add: 1, mul: 1.2, cap: 6 },
+            { add: 1, mul: 1.4, cap: 6 },
+            { add: 0, mul: 1.4, cap: 6 }
+        ]
+    },
+    {
+        name: "魂骑卡组2",
+        slots: [
+            { add: 1, mul: 1.2, cap: 6 },
+            { add: 1, mul: 1.4, cap: 6 },
+            { add: 0, mul: 1.4, cap: 6 }
+        ]
+    },
+    {
+        name: "魂骑卡组3",
+        slots: [
+            { add: 1, mul: 1.2, cap: 6 },
+            { add: 1, mul: 1.4, cap: 6 },
+            { add: 0, mul: 1.4, cap: 6 }
+        ]
+    },
+    {
+        name: "墨玄卡组1",
+        slots: [
+            { add: 3, mul: 1.2, cap: 8 },
+            { add: 1, mul: 1.4, cap: 6 },
+            { add: 0, mul: 1.4, cap: 5 }
+        ]
+    }
+];
+
+// 构建快速查找对象
+const templatesMap = {};
+TEMPLATES_CONFIG.forEach(tpl => {
+    templatesMap[tpl.name] = tpl.slots;
+});
+
+let currentTemplateName = TEMPLATES_CONFIG[0].name;
+
+// DOM 元素
+const templateSelect = document.getElementById("templateSelect");
+const diceInput = document.getElementById("diceInput");
+
+// 初始化下拉框
+function initTemplateSelect() {
+    templateSelect.innerHTML = "";
+    TEMPLATES_CONFIG.forEach(tpl => {
+        const opt = document.createElement("option");
+        opt.value = tpl.name;
+        opt.textContent = tpl.name;
+        templateSelect.appendChild(opt);
+    });
+    templateSelect.value = currentTemplateName;
+}
+initTemplateSelect();
+
+// 加载当前模板的基础三行（add/mul）
+function loadBase() {
+    const slots = templatesMap[currentTemplateName];
+    const container = document.getElementById("baseGroup");
+    container.innerHTML = "";
+    for (let i = 0; i < slots.length; i++) {
+        const item = slots[i];
+        const row = document.createElement("div");
+        row.className = "data-row";
+        row.innerHTML = `
+            <input type="number" class="add" value="${item.add}" placeholder="加数">
+            <input type="number" step="0.01" class="mul" value="${item.mul}" placeholder="乘数">
+            <div></div>
+        `;
+        container.appendChild(row);
+        row.querySelector(".add").addEventListener("input", () => { calculate(); saveData(); });
+        row.querySelector(".mul").addEventListener("input", () => { calculate(); saveData(); });
+    }
+}
+
+// 获取当前总加数和总乘数（包括基础三行 + 用户骰子数 + 额外BUFF）
+function getCurrentSum() {
+    const baseRows = document.querySelectorAll("#baseGroup .data-row");
+    const buffRows = document.querySelectorAll("#buffGroup .data-row");
+    let sumAdd = 0, sumMul = 0;
+    baseRows.forEach(row => {
+        let addVal = parseFloat(row.querySelector(".add").value) || 0;
+        let mulVal = parseFloat(row.querySelector(".mul").value) || 1;
+        sumAdd += addVal;
+        sumMul += mulVal;
+    });
+    // 用户输入的骰子数
+    let dice = parseFloat(diceInput.value) || 0;
+    sumAdd += dice;
+    // 额外BUFF
+    buffRows.forEach(row => {
+        sumAdd += parseFloat(row.querySelector(".add").value) || 0;
+        sumMul += parseFloat(row.querySelector(".mul").value) || 0;
+    });
+    return { sumAdd, sumMul };
+}
+
+function calculate() {
+    const { sumAdd, sumMul } = getCurrentSum();
+    const result = Math.floor(sumAdd * sumMul);
+    document.getElementById("result").innerText = result;
+    renderPreview();   // 刷新预览（不受用户骰子数影响，预览用固定3）
+    document.getElementById("backwardResult").innerHTML = "";
+    saveData();
+}
+
+// 倒推所需加数
+function backwardAdd() {
+    const { sumAdd, sumMul } = getCurrentSum();
+    const target = parseFloat(document.getElementById("targetResult").value);
+    if (isNaN(target)) {
+        document.getElementById("backwardResult").innerText = "❌ 请输入有效数字";
+        return;
+    }
+    const currentRes = Math.floor(sumAdd * sumMul);
+    if (target <= currentRes) {
+        document.getElementById("backwardResult").innerHTML = "✅ 当前结果已经≥预期，无需增加加数。";
+        return;
+    }
+    if (sumMul === 0) {
+        document.getElementById("backwardResult").innerHTML = "⚠️ 总乘数和为0，无法达成目标。";
+        return;
+    }
+    let need = Math.ceil(target / sumMul) - sumAdd;
+    if (need < 0) need = 0;
+    document.getElementById("backwardResult").innerHTML = `🔢 保持当前乘数总和 ${sumMul.toFixed(2)} 不变，还需增加 <strong style="color:#ff5722">${need}</strong> 点加数，即可达到 ${target}。`;
+}
+
+// 额外BUFF操作
+function loadBuff(savedBuffs) {
+    const container = document.getElementById("buffGroup");
+    container.innerHTML = "";
+    if (savedBuffs) {
+        savedBuffs.forEach(b => createBuffRow(b.add, b.mul));
+    }
+}
+
+function createBuffRow(add = 0, mul = 0) {
+    const container = document.getElementById("buffGroup");
+    const row = document.createElement("div");
+    row.className = "data-row";
+    row.innerHTML = `
+        <input type="number" class="add" value="${add}" placeholder="加数">
+        <input type="number" step="0.01" class="mul" value="${mul}" placeholder="乘数">
+        <button class="remove-btn">×</button>
+    `;
+    container.appendChild(row);
+    row.querySelector(".remove-btn").addEventListener("click", () => {
+        row.remove();
+        calculate();
+        saveData();
+    });
+    row.querySelector(".add").addEventListener("input", () => { calculate(); saveData(); });
+    row.querySelector(".mul").addEventListener("input", () => { calculate(); saveData(); });
+}
+
+function addBuff() { createBuffRow(); calculate(); saveData(); }
+function clearBuff() {
+    if (confirm("清空所有额外BUFF？")) {
+        document.getElementById("buffGroup").innerHTML = "";
+        calculate();
+        saveData();
+    }
+}
+
+// 切换模板
+function switchTemplate() {
+    const newName = templateSelect.value;
+    if (newName === currentTemplateName) return;
+    if (confirm(`切换至 ${newName} ？会覆盖当前卡组基础值`)) {
+        currentTemplateName = newName;
+        document.getElementById("currentTemplate").innerText = "当前卡组：" + currentTemplateName;
+        loadBase();
+        calculate();
+        saveData();
+    } else {
+        templateSelect.value = currentTemplateName;
+    }
+}
+templateSelect.addEventListener("change", switchTemplate);
+diceInput.addEventListener("input", () => { calculate(); saveData(); });
+
+// 预览渲染：每个模板的骰子数固定为3（预览用）
+function renderPreview() {
+    const previewDiv = document.getElementById("preview");
+    previewDiv.innerHTML = "";
+    for (const tpl of TEMPLATES_CONFIG) {
+        const slots = tpl.slots;
+        // 原始结果：使用模板自带的加数 + 固定骰子3
+        let rawAddSum = slots.reduce((sum, s) => sum + s.add, 0) + 3;
+        let rawMulSum = slots.reduce((sum, s) => sum + s.mul, 0);
+        let rawResult = Math.floor(rawAddSum * rawMulSum);
+        // 骰值上限总和：仅三个cap值相加（不乘乘数，不加骰子数）
+let upperResult = slots.reduce((sum, s) => sum + s.cap, 0);
+        
+        let tableHtml = `<div class="preview-title">🎲 ${tpl.name}</div>`;
+        tableHtml += `<table class="preview-table"><thead><tr>`;
+        for (let i = 1; i <= 3; i++) tableHtml += `<th>词条${i}<br><span style="font-weight:normal">加/乘</span></th>`;
+        tableHtml += `<th>固定骰子数</th><th>当前结果</th><th>🎯骰值上限总和</th>`;
+        tableHtml += `</thead><tbody><tr>`;
+        for (let i = 0; i < slots.length; i++) {
+            const s = slots[i];
+            tableHtml += `<td>+${s.add} / ×${s.mul}<br><span class="upper-badge">上限:${s.cap}</span></td>`;
+        }
+        tableHtml += `<td>3</td><td>${rawResult}</td><td style="background:#eef2ff;font-weight:bold;">${upperResult}</td>`;
+        tableHtml += `</tr></tbody></table>`;
+        previewDiv.innerHTML += tableHtml;
+    }
+}
+
+// 保存与加载
+function saveData() {
+    const buffs = [];
+    document.querySelectorAll("#buffGroup .data-row").forEach(r => {
+        buffs.push({
+            add: parseFloat(r.querySelector(".add").value) || 0,
+            mul: parseFloat(r.querySelector(".mul").value) || 0
+        });
+    });
+    const baseAdds = [], baseMuls = [];
+    document.querySelectorAll("#baseGroup .data-row .add").forEach(inp => baseAdds.push(parseFloat(inp.value) || 0));
+    document.querySelectorAll("#baseGroup .data-row .mul").forEach(inp => baseMuls.push(parseFloat(inp.value) || 1));
+    localStorage.setItem("userData", JSON.stringify({
+        currentTemplate: currentTemplateName,
+        buffs,
+        baseAdds,
+        baseMuls,
+        dice: diceInput.value
+    }));
+}
+
+function loadSavedData() {
+    const saved = JSON.parse(localStorage.getItem("userData") || "null");
+    if (saved) {
+        currentTemplateName = saved.currentTemplate;
+        templateSelect.value = currentTemplateName;
+        document.getElementById("currentTemplate").innerText = "当前卡组：" + currentTemplateName;
+        loadBase();
+        if (saved.baseAdds && saved.baseAdds.length === 3) {
+            const rows = document.querySelectorAll("#baseGroup .data-row");
+            rows.forEach((row, idx) => {
+                if (idx < 3) {
+                    row.querySelector(".add").value = saved.baseAdds[idx];
+                    row.querySelector(".mul").value = saved.baseMuls[idx];
+                }
+            });
+        }
+        if (saved.dice) diceInput.value = saved.dice;
+        loadBuff(saved.buffs);
+        calculate();
+    } else {
+        loadBase();
+        diceInput.value = 3;
+        calculate();
+    }
+}
+
+// 深色模式
+function toggleDark() {
+    document.body.classList.toggle("dark");
+}
+
+// 启动
+loadSavedData();
+</script>
+</body>
+</html>
