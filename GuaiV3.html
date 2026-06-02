@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>怪怪远征计算器</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#eef2f7;color:#333;padding:15px;transition:all .3s;}
+body.dark{background:#1a1a1a;color:#eee;}
+.container{max-width:1100px;margin:auto;}
+.card{background:rgba(255,255,255,0.9);backdrop-filter:blur(6px);border-radius:14px;padding:15px;margin-bottom:15px;box-shadow:0 4px 12px rgba(0,0,0,.08);transition:all .3s;}
+body.dark .card{background:rgba(30,30,30,0.8);}
+h1{text-align:center;font-size:26px;margin-bottom:12px;color:#4f7cff;}
+.current-template{background:#fffae5;color:#b26a00;padding:12px;border-radius:10px;text-align:center;font-weight:bold;margin-bottom:15px;font-size:16px;}
+body.dark .current-template{background:#333;color:#f5c242;}
+.select-template{width:100%;padding:12px;border-radius:10px;border:1px solid #ccc;margin-bottom:10px;font-size:15px;}
+.data-group{margin-bottom:15px;}
+.data-row{display:grid;grid-template-columns:1fr 1fr 40px;gap:8px;margin-bottom:10px;align-items:center;}
+.data-row input{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:15px;text-align:center;}
+body.dark .data-row input{background:#222;color:#eee;border:1px solid #555;}
+.remove-btn{border:none;border-radius:8px;background:#ff5252;color:white;font-size:16px;cursor:pointer;padding:0 5px;}
+.main-btn{width:100%;padding:12px;border:none;border-radius:10px;background:linear-gradient(135deg,#17a34a,#0f7a30);color:white;font-size:16px;margin-top:8px;transition:0.2s;cursor:pointer;}
+.main-btn:active{transform:scale(0.97);}
+.clear-btn{background:linear-gradient(135deg,#ff7f50,#ff3d00);}
+.result{font-size:28px;font-weight:bold;color:#ff5722;text-align:center;margin-top:10px;}
+body.dark .result{color:#ffab40;}
+.preview-table{width:100%;border-collapse:collapse;margin-top:8px;}
+.preview-table th, .preview-table td{border:1px solid #ccc;padding:6px 8px;text-align:center;font-size:14px;}
+body.dark .preview-table th, body.dark .preview-table td{border:1px solid #555;}
+.preview-title{font-weight:bold;margin-top:10px;font-size:15px;text-align:center;}
+@media(min-width:768px){.desktop-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>怪怪远征计算器</h1>
+<div class="card">
+<div class="current-template" id="currentTemplate">当前卡组：隐月卡组1</div>
+<select class="select-template" id="templateSelect" onchange="switchTemplate()">
+<option value="隐月卡组1">隐月卡组1</option>
+<option value="隐月卡组2">隐月卡组2</option>
+<option value="隐月卡组3">隐月卡组3</option>
+<option value="兔兔卡组1">兔兔卡组1</option>
+<option value="兔兔卡组2">兔兔卡组2</option>
+<option value="兔兔卡组3">兔兔卡组3</option>
+<option value="魂骑卡组1">魂骑卡组1</option>
+<option value="魂骑卡组2">魂骑卡组2</option>
+<option value="魂骑卡组3">魂骑卡组3</option>
+<option value="墨玄卡组1">墨玄卡组1</option>
+</select>
+</div>
+<div class="desktop-grid">
+<div class="card">
+<h3>卡组基础</h3>
+<div class="data-group" id="baseGroup"></div>
+<h3>额外BUFF</h3>
+<div class="data-group" id="buffGroup"></div>
+<button class="main-btn" onclick="addBuff()">+ 添加BUFF</button>
+<button class="main-btn clear-btn" onclick="clearBuff()">清空额外BUFF</button>
+<button class="main-btn" onclick="calculate()">计算结果</button>
+<div class="result" id="result">0</div>
+<button class="main-btn" onclick="toggleDark()">🌙 深色模式</button>
+</div>
+<div class="card">
+<h3>模板预览</h3>
+<div id="preview"></div>
+</div>
+</div>
+<script>
+const templates={
+"隐月卡组1":[{add:3,mul:1.2},{add:3,mul:1.2},{add:0,mul:1.8},{add:3,mul:0}],
+"隐月卡组2":[{add:2,mul:1.4},{add:2,mul:1.2},{add:0,mul:1.8},{add:3,mul:0}],
+"隐月卡组3":[{add:1,mul:1.2},{add:1,mul:1.4},{add:0,mul:1.4},{add:3,mul:0}],
+"兔兔卡组1":[{add:1,mul:1.2},{add:1,mul:1.4},{add:0,mul:1.4},{add:3,mul:0}],
+"兔兔卡组2":[{add:1,mul:1.2},{add:1,mul:1.4},{add:0,mul:1.4},{add:3,mul:0}],
+"兔兔卡组3":[{add:1,mul:1.2},{add:1,mul:1.4},{add:0,mul:1.4},{add:3,mul:0}],
+"魂骑卡组1":[{add:1,mul:1.2},{add:1,mul:1.4},{add:0,mul:1.4},{add:3,mul:0}],
+"魂骑卡组2":[{add:1,mul:1.2},{add:1,mul:1.4},{add:0,mul:1.4},{add:3,mul:0}],
+"魂骑卡组3":[{add:1,mul:1.2},{add:1,mul:1.4},{add:0,mul:1.4},{add:3,mul:0}],
+"墨玄卡组1":[{add:3,mul:1.2},{add:1,mul:1.4},{add:0,mul:1.4},{add:3,mul:0}]
+};
+let currentTemplate="隐月卡组1";
+
+// 初始化
+function init(){
+    const saved=JSON.parse(localStorage.getItem("userData")||"null");
+    if(saved){
+        currentTemplate=saved.currentTemplate;
+        document.getElementById("currentTemplate").innerText="当前卡组："+currentTemplate;
+        document.getElementById("templateSelect").value=currentTemplate;
+    }
+    loadBase();
+    loadBuff(saved?.buffs);
+    calculate();
+    renderPreview();
+}
+
+// 加载基础卡组
+function loadBase(){
+    const base=templates[currentTemplate];
+    const container=document.getElementById("baseGroup");
+    container.innerHTML="";
+    base.forEach((item,i)=>{
+        const row=document.createElement("div");
+        row.className="data-row";
+        if(i<3){
+            row.innerHTML=`
+            <input type="number" class="add" value="${item.add}" placeholder="加数">
+            <input type="number" step="0.01" class="mul" value="${item.mul}" placeholder="乘数">
+            <div></div>
+            `;
+        } else {
+            row.innerHTML=`
+            <input type="number" class="add" value="${item.add}" placeholder="骰子数">
+            <input type="number" class="mul" value="0" disabled>
+            <div></div>
+            `;
+        }
+        container.appendChild(row);
+        row.querySelector(".add").addEventListener("input",()=>{calculate();saveData();});
+        if(i<3) row.querySelector(".mul").addEventListener("input",()=>{calculate();saveData();});
+    });
+}
+
+// 加载额外BUFF
+function loadBuff(savedBuffs){
+    const container=document.getElementById("buffGroup");
+    container.innerHTML="";
+    if(savedBuffs) savedBuffs.forEach(b=>{createBuffRow(b.add,b.mul);});
+}
+
+// 创建额外BUFF行
+function createBuffRow(add=0,mul=0){
+    const container=document.getElementById("buffGroup");
+    const row=document.createElement("div");
+    row.className="data-row";
+    row.innerHTML=`
+    <input type="number" class="add" value="${add}" placeholder="加数">
+    <input type="number" step="0.01" class="mul" value="${mul}" placeholder="乘数">
+    <button class="remove-btn">×</button>
+    `;
+    container.appendChild(row);
+    row.querySelector(".remove-btn").addEventListener("click",()=>{
+        row.remove();
+        calculate();
+        saveData();
+    });
+    row.querySelector(".add").addEventListener("input",()=>{calculate();saveData();});
+    row.querySelector(".mul").addEventListener("input",()=>{calculate();saveData();});
+}
+
+// 添加BUFF
+function addBuff(){createBuffRow();calculate();saveData();}
+
+// 清空BUFF
+function clearBuff(){
+    if(confirm("确认清空所有额外BUFF吗？")){
+        document.getElementById("buffGroup").innerHTML="";
+        calculate();
+        saveData();
+    }
+}
+
+// 切换模板
+function switchTemplate(){
+    const sel=document.getElementById("templateSelect").value;
+    if(sel===currentTemplate) return;
+    if(confirm(`确认加载模板 ${sel} 吗？`)){
+        currentTemplate=sel;
+        document.getElementById("currentTemplate").innerText="当前卡组："+currentTemplate;
+        loadBase();
+        calculate();
+        saveData();
+    }
+}
+
+// 保存数据到 LocalStorage
+function saveData(){
+    const buffs=[];
+    document.querySelectorAll("#buffGroup .data-row").forEach(r=>{
+        const add=parseFloat(r.querySelector(".add").value)||0;
+        const mul=parseFloat(r.querySelector(".mul").value)||0;
+        buffs.push({add,mul});
+    });
+    localStorage.setItem("userData",JSON.stringify({currentTemplate,buffs}));
+}
+
+// 计算结果
+function calculate(){
+    const baseRows=document.querySelectorAll("#baseGroup .data-row");
+    const buffRows=document.querySelectorAll("#buffGroup .data-row");
+    let sumAdd=0, sumMul=0;
+    baseRows.forEach((r,i)=>{
+        const add=parseFloat(r.querySelector(".add").value)||0;
+        sumAdd+=add;
+        if(i<3){
+            const mul=parseFloat(r.querySelector(".mul").value)||1;
+            sumMul+=mul;
+        }
+    });
+    buffRows.forEach(r=>{
+        sumAdd+=parseFloat(r.querySelector(".add").value)||0;
+        sumMul+=parseFloat(r.querySelector(".mul").value)||0;
+    });
+    const result=Math.floor(sumAdd*sumMul);
+    document.getElementById("result").innerText=result;
+    renderPreview();
+}
+
+// 切换深色模式
+function toggleDark(){
+    document.body.classList.toggle("dark");
+}
+function renderPreview(){
+    const preview=document.getElementById("preview");
+    preview.innerHTML="";
+    for(const tplName in templates){
+        const tpl=templates[tplName];
+        let sumAdd=0,sumMul=0;
+        tpl.forEach((item,i)=>{
+            sumAdd+=item.add;
+            if(i<3) sumMul+=item.mul;
+        });
+        const result=Math.floor(sumAdd*sumMul);
+        let table=`<div class="preview-title">${tplName}</div><table class="preview-table"><tr><th>词条1</th><th>词条2</th><th>词条3</th><th>骰子数</th><th>结果</th></tr>`;
+        table+=`<tr>`;
+        tpl.forEach(item=>{
+            table+=`<td>加:${item.add}<br>乘:${item.mul}</td>`;
+        });
+        table+=`<td>${result}</td></tr></table>`;
+        preview.innerHTML+=table;
+    }
+}
+
+// 初始化
+init();
+</script>
+</body>
+</html>
